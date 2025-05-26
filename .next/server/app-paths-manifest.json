@@ -1,0 +1,8 @@
+{
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/page": "app/page.js",
+  "/review/page": "app/review/page.js",
+  "/program-allocator/page": "app/program-allocator/page.js",
+  "/functional-allocation/page": "app/functional-allocation/page.js",
+  "/program-intro/page": "app/program-intro/page.js"
+}
