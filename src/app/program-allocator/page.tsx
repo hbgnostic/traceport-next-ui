@@ -1,5 +1,5 @@
 'use client';
-
+console.log("trigger rebuild");
 import { useEffect, useState } from 'react';
 
 type Program = {
@@ -17,7 +17,7 @@ export default function ProgramAllocator() {
   useEffect(() => {
     async function fetchSuggestedPrograms() {
       try {
-        const res = await fetch('${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suggest-programs', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suggest-programs`, {
           method: 'POST'
         });
         const data = await res.json();
@@ -176,7 +176,7 @@ export default function ProgramAllocator() {
           <button
             onClick={async () => {
               try {
-                const res = await fetch('${process.env.NEXT_PUBLIC_API_BASE_URL}/api/program-allocation', {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/program-allocation`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ programs })

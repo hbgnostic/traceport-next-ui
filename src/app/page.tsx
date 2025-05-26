@@ -16,7 +16,7 @@ export default function Home() {
     const formData = new FormData(e.currentTarget);
 
     try {
-      const res = await fetch('${process.env.NEXT_PUBLIC_API_BASE_URL}/api/upload-docs', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/upload-docs`, {
         method: 'POST',
         body: formData,
       });

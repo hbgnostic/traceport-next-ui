@@ -1,5 +1,5 @@
 'use client';
-
+console.log("trigger rebuild");
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pie } from 'react-chartjs-2';
@@ -30,7 +30,7 @@ export default function FunctionalAllocation() {
   useEffect(() => {
     async function fetchFunctionalData() {
       try {
-        const res = await fetch('${process.env.NEXT_PUBLIC_API_BASE_URL}/api/analyze', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/analyze`, {
           method: 'POST',
         });
 

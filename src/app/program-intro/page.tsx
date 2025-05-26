@@ -1,4 +1,5 @@
 'use client';
+// Temp change to force Git recognition
 import { useRouter } from 'next/navigation';
 
 export default function ProgramIntro() {
