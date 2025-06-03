@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 type UploadMode = 'pdf' | 'xml';
@@ -49,11 +49,13 @@ export function UploadProvider({ children }: { children: ReactNode }) {
   }, [searchParams]);
 
   return (
-    <UploadContext.Provider
-      value={{ mode, setMode, xmlUrl, setXmlUrl, totals, setTotals, programs, setPrograms }}
-    >
-      {children}
-    </UploadContext.Provider>
+    <Suspense fallback={null}>
+      <UploadContext.Provider
+        value={{ mode, setMode, xmlUrl, setXmlUrl, totals, setTotals, programs, setPrograms }}
+      >
+        {children}
+      </UploadContext.Provider>
+    </Suspense>
   );
 }
 
