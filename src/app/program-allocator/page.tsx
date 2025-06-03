@@ -1,6 +1,7 @@
 'use client';
-console.log("trigger rebuild");
+import { useUploadContext } from '@/context/UploadContext';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 type Program = {
   name: string;
@@ -10,21 +11,46 @@ type Program = {
 
 export default function ProgramAllocator() {
   const [step, setStep] = useState(1);
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const { programs, setPrograms, mode, xmlUrl } = useUploadContext();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchSuggestedPrograms() {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suggest-programs`, {
-          method: 'POST'
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Upload-Mode': mode,
+          },
+          body: mode === 'xml' ? JSON.stringify({ xml_url: xmlUrl }) : undefined,
         });
+  
         const data = await res.json();
+        console.log("📦 suggest-programs raw response:", data);
+  
+        if (data.message) {
+          setError(data.message);
+          setLoading(false);
+          return;
+        }
+        
+        if (Array.isArray(data) && data.length === 0) {
+          setError("We couldn't detect any program areas from your Form 990. Try adding an annual report or filling in your program areas manually.");
+          setLoading(false);
+          return;
+        }
+  
         if (Array.isArray(data)) {
           const withPercents = data.map((p: any) => ({ ...p, percentage: '' }));
           setPrograms(withPercents);
+        } else if (data && typeof data === 'object' && typeof data.message === 'string') {
+          // Handle case where OpenAI returned a fallback message
+          setError(data.message);
         } else {
+          // Truly malformed or unexpected
           setError('Could not load suggestions.');
         }
       } catch (e) {
@@ -33,7 +59,7 @@ export default function ProgramAllocator() {
         setLoading(false);
       }
     }
-
+  
     fetchSuggestedPrograms();
   }, []);
 
@@ -109,7 +135,7 @@ export default function ProgramAllocator() {
   <>
 <p className="mb-4">
   <strong>Now that we’ve identified your core program areas, you’ll estimate how much of your program budget goes to each one.</strong><br />
- </p><p className="mb-4"> This step allows TracePort to allocate future unrestricted donations more transparently — connecting every dollar to its mission-driven impact.
+ </p><p className="mb-4"> This step allows Traceport to allocate future unrestricted donations more transparently — connecting every dollar to its mission-driven impact.
 </p>
 
 <p className="mb-4 italic text-sm text-gray-700">
@@ -148,12 +174,11 @@ export default function ProgramAllocator() {
         <>
           {!isValidTotal && (
             <p className="text-red-600 mb-2 text-sm">
-              Please ensure your program percentages total approximately 100%. (Current total: {totalPercent}%)
+              Please ensure your program percentages total 100%. (Current total: {totalPercent}%)
             </p>
           )}
           <button onClick={() => {
-            localStorage.setItem('programs', JSON.stringify(programs));
-            window.location.href = '/review';
+            router.push('/review');
           }} className="bg-[#019AA8] text-white px-4 py-2 rounded">
             Finish
         </button>

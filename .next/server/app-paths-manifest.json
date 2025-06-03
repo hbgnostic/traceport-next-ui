@@ -1,0 +1,7 @@
+{
+  "/functional-allocation/page": "app/functional-allocation/page.js",
+  "/program-intro/page": "app/program-intro/page.js",
+  "/review/page": "app/review/page.js",
+  "/program-allocator/page": "app/program-allocator/page.js",
+  "/page": "app/page.js"
+}

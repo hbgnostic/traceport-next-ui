@@ -1,16 +1,8 @@
 'use client';
-console.log("trigger rebuild");
+import { useUploadContext } from '@/context/UploadContext';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Pie } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-
-ChartJS.register(ArcElement, Tooltip, Legend);
+import UnifiedPieChart from '@/components/UnifiedPieChart';
 
 type Totals = {
   program: number;
@@ -22,20 +14,30 @@ type Totals = {
 };
 
 export default function FunctionalAllocation() {
-  const [totals, setTotals] = useState<Totals | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { mode, xmlUrl, totals, setTotals } = useUploadContext();
 
   useEffect(() => {
     async function fetchFunctionalData() {
+      // already done via the hook above
+      const endpoint =
+        mode === 'xml'
+          ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/xml-analyze`
+          : `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/analyze`;
+  
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/analyze`, {
-          method: 'POST',
-        });
-
+        const options: RequestInit = { method: 'POST' };
+  
+        if (mode === 'xml') {
+          options.headers = { 'Content-Type': 'application/json' };
+          options.body = JSON.stringify({ xml_url: xmlUrl });
+        }
+  
+        const res = await fetch(endpoint, options);
         const data = await res.json();
-
+  
         if (res.ok && !data.error) {
           setTotals(data);
         } else {
@@ -47,7 +49,7 @@ export default function FunctionalAllocation() {
         setLoading(false);
       }
     }
-
+  
     fetchFunctionalData();
   }, []);
 
@@ -67,39 +69,33 @@ export default function FunctionalAllocation() {
             </p>
             <p className="text-center mb-6 text-gray-700">
               This step establishes your organization’s overall spending profile — a required foundation for allocating
-              <em>unrestricted</em> donations in TracePort. Your salaries and overhead are already accounted for here.
+              <em>unrestricted</em> donations in Traceport. Your salaries and overhead are already accounted for here.
             </p>
 
-          <ul className="list-none p-0 mb-4">
-            <li><strong>Program Services:</strong> ${totals.program} ({totals.program_pct}%)</li>
-            <li><strong>Administrative:</strong> ${totals.admin} ({totals.admin_pct}%)</li>
-            <li><strong>Fundraising:</strong> ${totals.fundraising} ({totals.fundraising_pct}%)</li>
-          </ul>
+            <ul className="list-none p-0 mb-4">
+              <li>
+                <strong>Program Services:</strong> ${totals.program.toLocaleString()} ({totals.program_pct}%)
+              </li>
+              <li>
+                <strong>Administrative:</strong> ${totals.admin.toLocaleString()} ({totals.admin_pct}%)
+              </li>
+              <li>
+                <strong>Fundraising:</strong> ${totals.fundraising.toLocaleString()} ({totals.fundraising_pct}%)
+              </li>
+            </ul>
 
-          <div className="w-72 mx-auto mb-6">
-            <Pie
-              data={{
-                labels: ['Program Services', 'Administrative', 'Fundraising'],
-                datasets: [
-                  {
-                    data: [
-                      totals.program_pct,
-                      totals.admin_pct,
-                      totals.fundraising_pct,
-                    ],
-                    backgroundColor: ['#019AA8', '#C9E5E9', '#16243E'],
-                    borderWidth: 1,
-                  },
-                ],
-              }}
-              options={{ responsive: true }}
+            <UnifiedPieChart
+              data={[
+                { label: 'Program Services', value: totals.program_pct },
+                { label: 'Administrative', value: totals.admin_pct },
+                { label: 'Fundraising', value: totals.fundraising_pct }
+              ]}
+              size="large"
+              showPercentagesInLegend={true}
             />
-          </div>
-
           <div className="flex justify-center gap-4">
             <button
               onClick={() => {
-                localStorage.setItem('functional', JSON.stringify(totals));
                 router.push('/program-intro');
               }}
               className="bg-[#019AA8] text-white px-4 py-2 rounded"

@@ -10,8 +10,7 @@ import {
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-// Set default options for crisp rendering
-ChartJS.defaults.devicePixelRatio = 2; // Force high DPI rendering
+ChartJS.defaults.devicePixelRatio = 2;
 
 type ChartData = {
   label: string;
@@ -26,43 +25,49 @@ type Props = {
   showPercentagesInLegend?: boolean;
 };
 
-export default function UnifiedPieChart({ 
-  data, 
-  title, 
+export default function UnifiedPieChart({
+  data,
+  title,
   size = 'medium',
-  showPercentagesInLegend = true 
+  showPercentagesInLegend = true,
 }: Props) {
-  // Consistent sizing options
   const sizeClasses = {
-    small: 'w-64 h-64',   // 256px
-    medium: 'w-80 h-80',  // 320px  
-    large: 'w-96 h-96'    // 384px
+    small: 'w-64 h-64',
+    medium: 'w-80 h-80',
+    large: 'w-96 h-96',
   };
 
-  // Default color palette
-  const defaultColors = [
-    '#019AA8', // Traceport teal
-    '#C9E5E9', // Light teal
-    '#16243E', // Dark blue
-    '#A0D3D8', // Medium teal
-    '#5DBABF', // Darker teal
-    '#2D8A8F', // Deep teal
-    '#7BB3B8', // Soft teal
-    '#4A9BA0', // Blue-teal
-  ];
+  const programColors = ['#019AA8', '#5DBABF', '#7BB3B8', '#A0D3D8', '#C9E5E9'];
+  const adminColor = '#7A89A7';
+  const fundraisingColor = '#E18C7D';
 
-  // Assign colors to data
-  const chartData = data.map((item, index) => ({
-    ...item,
-    color: item.color || defaultColors[index % defaultColors.length],
-  }));
+  // Assign colors based on content
+  let programIndex = 0;
+  const chartData = data.map((item) => {
+    const label = item.label.toLowerCase();
+    let color;
+
+    if (label.includes('admin')) {
+      color = adminColor;
+    } else if (label.includes('fundraising')) {
+      color = fundraisingColor;
+    } else {
+      color = programColors[programIndex % programColors.length];
+      programIndex += 1;
+    }
+
+    return {
+      ...item,
+      color: item.color || color,
+    };
+  });
 
   const chartConfig = {
-    labels: chartData.map(d => d.label),
+    labels: chartData.map((d) => d.label),
     datasets: [
       {
-        data: chartData.map(d => d.value),
-        backgroundColor: chartData.map(d => d.color),
+        data: chartData.map((d) => d.value),
+        backgroundColor: chartData.map((d) => d.color),
         borderColor: '#ffffff',
         borderWidth: 2,
       },
@@ -72,7 +77,7 @@ export default function UnifiedPieChart({
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    devicePixelRatio: 2, // Force crisp rendering
+    devicePixelRatio: 2,
     plugins: {
       legend: {
         position: 'bottom' as const,
@@ -82,19 +87,20 @@ export default function UnifiedPieChart({
           font: {
             size: 11,
           },
-          generateLabels: showPercentagesInLegend ? (chart: any) => {
-            const labels = chart.data.labels || [];
-            return labels.map((label: string, index: number) => {
-              const value = chartData[index].value;
-              return {
-                text: `${label}: ${value.toFixed(1)}%`,
-                fillStyle: chartData[index].color,
-                strokeStyle: '#ffffff',
-                lineWidth: 2,
-                index: index,
-              };
-            });
-          } : undefined,
+          generateLabels: showPercentagesInLegend
+            ? (chart: any) => {
+                return chart.data.labels.map((label: string, index: number) => {
+                  const value = chartData[index].value;
+                  return {
+                    text: `${label}: ${value.toFixed(1)}%`,
+                    fillStyle: chartData[index].color,
+                    strokeStyle: '#ffffff',
+                    lineWidth: 2,
+                    index: index,
+                  };
+                });
+              }
+            : undefined,
         },
       },
       tooltip: {
@@ -107,7 +113,6 @@ export default function UnifiedPieChart({
         },
       },
     },
-    // Force canvas to render at 2x resolution for crisp display
     onResize: (chart: any) => {
       chart.canvas.style.height = chart.canvas.style.height;
       chart.canvas.style.width = chart.canvas.style.width;
@@ -116,9 +121,7 @@ export default function UnifiedPieChart({
 
   return (
     <div className="mb-8">
-      {title && (
-        <h2 className="text-xl font-semibold mb-4 text-center">{title}</h2>
-      )}
+      {title && <h2 className="text-xl font-semibold mb-4 text-center">{title}</h2>}
       <div className={`${sizeClasses[size]} mx-auto relative`}>
         <Pie data={chartConfig} options={options} />
       </div>
