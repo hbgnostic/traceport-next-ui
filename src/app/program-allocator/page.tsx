@@ -21,7 +21,7 @@ export default function ProgramAllocator() {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/suggest-programs`, {
           method: 'POST',
-          headers: {
+          headers: {  
             'Content-Type': 'application/json',
             'X-Upload-Mode': mode,
           },
