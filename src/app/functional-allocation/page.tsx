@@ -12,6 +12,8 @@ type Totals = {
   admin_pct: number;
   fundraising_pct: number;
   transparency_metrics?: TransparencyMetrics;
+} & {
+  [key: string]: any; // Allow additional properties
 };
 
 type TransparencyMetrics = {
@@ -67,6 +69,7 @@ export default function FunctionalAllocation() {
           setError(data.error || `Server error: ${res.status}`);
         }
       } catch (err) {
+        console.error('❌ Fetch error:', err);
         setError('Could not connect to server.');
       } finally {
         setLoading(false);
@@ -74,7 +77,7 @@ export default function FunctionalAllocation() {
     }
   
     fetchFunctionalData();
-  }, []);
+  }, [mode, xmlUrl, setTotals]);
 
   const formatCurrency = (amount?: number) => {
     if (!amount) return 'N/A';
@@ -111,12 +114,16 @@ export default function FunctionalAllocation() {
     return 'text-red-600';
   };
 
+
+
   return (
     <main className="p-6 max-w-4xl mx-auto text-gray-800">
       <h1 className="text-2xl font-bold mb-4 text-center text-[#16243E]">Functional Expense Allocation</h1>
 
       {loading && <p className="text-center">📤 Loading functional expense data...</p>}
       {error && <p className="text-red-600 text-center">{error}</p>}
+
+
 
       {totals && (
         <>
@@ -156,130 +163,133 @@ export default function FunctionalAllocation() {
           </section>
 
           {/* Transparency Metrics Section */}
-          {(totals as any).transparency_metrics && mode === 'xml' && (
-            <section className="mt-8 mb-8 bg-gray-50 p-6 rounded-lg border">
-              <h2 className="text-xl font-semibold text-center mb-4 text-[#16243E]">
-                🌟 Transparency Health Overview
-              </h2>
-              <p className="text-center mb-6 text-gray-600">
-                Additional insights extracted from your 990 filing that help demonstrate organizational transparency and health.
-              </p>
-
-              <div className="grid md:grid-cols-3 gap-6">
-                {/* Financial Health */}
-                <div className="bg-white p-4 rounded-lg shadow-sm">
-                  <h3 className="font-semibold mb-3 text-[#16243E] flex items-center">
-                    💰 Financial Health
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Tax Year:</span>
-                      <span className="font-medium">{(totals as any).transparency_metrics.tax_year || 'N/A'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Total Revenue:</span>
-                      <span className="font-medium">{formatCurrency((totals as any).transparency_metrics.total_revenue)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Program Efficiency:</span>
-                      <span className={`font-medium ${getProgramRatioColor((totals as any).transparency_metrics.program_ratio)}`}>
-                        {(totals as any).transparency_metrics.program_ratio?.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Net Assets:</span>
-                      <span className="font-medium">{formatCurrency((totals as any).transparency_metrics.net_assets)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Governance */}
-                <div className="bg-white p-4 rounded-lg shadow-sm">
-                  <h3 className="font-semibold mb-3 text-[#16243E] flex items-center">
-                    🏛️ Governance
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Board Size:</span>
-                      <span className="font-medium">{(totals as any).transparency_metrics.board_size || 'N/A'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Independent Members:</span>
-                      <span className="font-medium">{(totals as any).transparency_metrics.independent_members || 'N/A'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Governance Rating:</span>
-                      <span className={`font-medium capitalize ${getGovernanceColor((totals as any).transparency_metrics.governance_rating)}`}>
-                        {(totals as any).transparency_metrics.governance_rating || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="mt-3">
-                      <p className="text-xs text-gray-600 mb-1">Policies in place:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {(totals as any).transparency_metrics.has_conflict_policy && (
-                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Conflict ✓</span>
-                        )}
-                        {(totals as any).transparency_metrics.has_whistleblower_policy && (
-                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Whistleblower ✓</span>
-                        )}
-                        {(totals as any).transparency_metrics.has_retention_policy && (
-                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Retention ✓</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Transparency */}
-                <div className="bg-white p-4 rounded-lg shadow-sm">
-                  <h3 className="font-semibold mb-3 text-[#16243E] flex items-center">
-                    🌐 Transparency
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>990 Filed:</span>
-                      <span className="font-medium">{formatDate((totals as any).transparency_metrics.filing_date)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Filing Status:</span>
-                      <span className="font-medium capitalize text-green-600">
-                        {(totals as any).transparency_metrics.filing_status?.replace('_', ' ') || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Website:</span>
-                      <span className="font-medium">
-                        {(totals as any).transparency_metrics.has_website ? '✓' : '✗'}
-                      </span>
-                    </div>
-                    {(totals as any).transparency_metrics.website_url && (
-                      <div className="mt-2">
-                        <a 
-                          href={(totals as any).transparency_metrics.website_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-[#019AA8] hover:underline break-all"
-                        >
-                          {(totals as any).transparency_metrics.website_url}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Data Quality Note */}
-              <div className="mt-4 p-3 bg-blue-50 rounded border-l-4 border-blue-400">
-                <p className="text-sm text-blue-800">
-                  <strong>📋 Data Quality:</strong> {(totals as any).transparency_metrics.data_quality} 
-                  ({(totals as any).transparency_metrics.source.toUpperCase()} source)
-                  {(totals as any).transparency_metrics.data_quality === 'complete' && 
-                    ' - All transparency metrics successfully extracted from your 990 filing.'
-                  }
+          {(totals as any)?.transparency_metrics && mode === 'xml' && (() => {
+            const metrics = (totals as any).transparency_metrics;
+            return (
+              <section className="mt-8 mb-8 bg-gray-50 p-6 rounded-lg border">
+                <h2 className="text-xl font-semibold text-center mb-4 text-[#16243E]">
+                  🌟 Transparency Health Overview
+                </h2>
+                <p className="text-center mb-6 text-gray-600">
+                  Additional insights extracted from your 990 filing that help demonstrate organizational transparency and health.
                 </p>
-              </div>
-            </section>
-          )}
+
+                <div className="grid md:grid-cols-3 gap-6">
+                  {/* Financial Health */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <h3 className="font-semibold mb-3 text-[#16243E] flex items-center">
+                      💰 Financial Health
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Tax Year:</span>
+                        <span className="font-medium">{metrics.tax_year || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Total Revenue:</span>
+                        <span className="font-medium">{formatCurrency(metrics.total_revenue)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Program Efficiency:</span>
+                        <span className={`font-medium ${getProgramRatioColor(metrics.program_ratio)}`}>
+                          {metrics.program_ratio?.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Net Assets:</span>
+                        <span className="font-medium">{formatCurrency(metrics.net_assets)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Governance */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <h3 className="font-semibold mb-3 text-[#16243E] flex items-center">
+                      🏛️ Governance
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Board Size:</span>
+                        <span className="font-medium">{metrics.board_size || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Independent Members:</span>
+                        <span className="font-medium">{metrics.independent_members || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Governance Rating:</span>
+                        <span className={`font-medium capitalize ${getGovernanceColor(metrics.governance_rating)}`}>
+                          {metrics.governance_rating || 'N/A'}
+                        </span>
+                      </div>
+                      <div className="mt-3">
+                        <p className="text-xs text-gray-600 mb-1">Policies in place:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {metrics.has_conflict_policy && (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Conflict ✓</span>
+                          )}
+                          {metrics.has_whistleblower_policy && (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Whistleblower ✓</span>
+                          )}
+                          {metrics.has_retention_policy && (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Retention ✓</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Transparency */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <h3 className="font-semibold mb-3 text-[#16243E] flex items-center">
+                      🌐 Transparency
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>990 Filed:</span>
+                        <span className="font-medium">{formatDate(metrics.filing_date)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Filing Status:</span>
+                        <span className="font-medium capitalize text-green-600">
+                          {metrics.filing_status?.replace('_', ' ') || 'N/A'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Website:</span>
+                        <span className="font-medium">
+                          {metrics.has_website ? '✓' : '✗'}
+                        </span>
+                      </div>
+                      {metrics.website_url && (
+                        <div className="mt-2">
+                          <a 
+                            href={metrics.website_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-[#019AA8] hover:underline break-all"
+                          >
+                            {metrics.website_url}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data Quality Note */}
+                <div className="mt-4 p-3 bg-blue-50 rounded border-l-4 border-blue-400">
+                  <p className="text-sm text-blue-800">
+                    <strong>📋 Data Quality:</strong> {metrics.data_quality} 
+                    ({metrics.source.toUpperCase()} source)
+                    {metrics.data_quality === 'complete' && 
+                      ' - All transparency metrics successfully extracted from your 990 filing.'
+                    }
+                  </p>
+                </div>
+              </section>
+            );
+          })()}
 
           {/* PDF Notice */}
           {mode === 'pdf' && (
