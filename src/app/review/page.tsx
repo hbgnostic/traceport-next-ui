@@ -56,18 +56,32 @@ export default function Review() {
   const generateDatabaseFormat = () => {
     const transparencyMetrics = (totals as any)?.transparency_metrics;
 
-    // Use program breakdown from API response if available, otherwise use manual programs
+    // Combine user-edited program data with API meta_tags
     let programBreakdown;
     if (mode === 'xml' && apiResponse?.functionalAllocation?.programBreakdown) {
-      programBreakdown = apiResponse.functionalAllocation.programBreakdown;
+      // For XML mode: Use user edits for names/percentages, but preserve API meta_tags
+      const apiPrograms = apiResponse.functionalAllocation.programBreakdown;
+      programBreakdown = programs
+        .filter(p => p.percentage && p.percentage !== "") // Only include programs with percentages
+        .map((program, index) => {
+          // Try to find corresponding API program to get meta_tags
+          const matchingApiProgram = apiPrograms[index]; // Match by index for now
+          return {
+            programId: `prog_${Date.now()}_${index + 1}`, // Generate unique IDs
+            programName: program.name, // Use user-edited name
+            percentageOfProgram: parseInt(program.percentage) || 0, // Use user-edited percentage
+            metaTags: matchingApiProgram?.metaTags || [] // Use API meta_tags if available
+          };
+        });
     } else {
+      // For PDF mode or fallback: Use only user-edited data
       programBreakdown = programs
         .filter(p => p.percentage && p.percentage !== "") // Only include programs with percentages
         .map((program, index) => ({
           programId: `prog_${Date.now()}_${index + 1}`, // Generate unique IDs
           programName: program.name,
           percentageOfProgram: parseInt(program.percentage) || 0,
-          metaTags: [] // You'll assign these later
+          metaTags: [] // No meta_tags for PDF mode
         }));
     }
 
