@@ -42,7 +42,7 @@ export default function FunctionalAllocation() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const router = useRouter();
-  const { mode, xmlUrl, totals, setTotals } = useUploadContext();
+  const { mode, xmlUrl, totals, setTotals, apiResponse, setApiResponse } = useUploadContext();
 
   useEffect(() => {
     async function fetchFunctionalData() {
@@ -61,10 +61,47 @@ export default function FunctionalAllocation() {
   
         const res = await fetch(endpoint, options);
         const data = await res.json();
-  
+
         if (res.ok && !data.error) {
           console.log('📊 Received data from API:', data);
-          setTotals(data);
+
+          if (mode === 'xml') {
+            // Handle new nested structure for XML
+            setApiResponse(data);
+            const functionalData = data.functionalAllocation?.functionalAllocation;
+            if (functionalData) {
+              // Convert to legacy format for backward compatibility
+              const legacyTotals = {
+                ...functionalData,
+                transparency_metrics: data.transparencyMetrics ? {
+                  source: data.transparencyMetrics.source,
+                  data_quality: data.transparencyMetrics.data_quality,
+                  last_updated: data.transparencyMetrics.last_updated,
+                  tax_year: data.transparencyMetrics.tax_year,
+                  filing_date: data.transparencyMetrics.filing_date,
+                  filing_status: data.transparencyMetrics.filing_status,
+                  total_revenue: data.transparencyMetrics.financial_health?.total_revenue,
+                  total_expenses: data.transparencyMetrics.financial_health?.total_expenses,
+                  net_assets: data.transparencyMetrics.financial_health?.net_assets,
+                  program_ratio: data.transparencyMetrics.financial_health?.program_ratio,
+                  admin_ratio: data.transparencyMetrics.financial_health?.admin_ratio,
+                  fundraising_ratio: data.transparencyMetrics.financial_health?.fundraising_ratio,
+                  board_size: data.transparencyMetrics.governance?.board_size,
+                  independent_members: data.transparencyMetrics.governance?.independent_members,
+                  governance_rating: data.transparencyMetrics.governance?.governance_rating,
+                  has_conflict_policy: data.transparencyMetrics.governance?.has_conflict_policy,
+                  has_whistleblower_policy: data.transparencyMetrics.governance?.has_whistleblower_policy,
+                  has_retention_policy: data.transparencyMetrics.governance?.has_retention_policy,
+                  website_url: data.transparencyMetrics.transparency?.website_url,
+                  has_website: data.transparencyMetrics.transparency?.has_website
+                } : undefined
+              };
+              setTotals(legacyTotals);
+            }
+          } else {
+            // PDF mode - keep existing behavior
+            setTotals(data);
+          }
         } else {
           setError(data.error || `Server error: ${res.status}`);
         }

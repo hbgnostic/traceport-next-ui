@@ -11,7 +11,7 @@ type Program = {
 
 export default function ProgramAllocator() {
   const [step, setStep] = useState(1);
-  const { programs, setPrograms, mode, xmlUrl } = useUploadContext();
+  const { programs, setPrograms, mode, xmlUrl, apiResponse } = useUploadContext();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -46,6 +46,14 @@ export default function ProgramAllocator() {
         if (Array.isArray(data)) {
           const withPercents = data.map((p: any) => ({ ...p, percentage: '' }));
           setPrograms(withPercents);
+        } else if (mode === 'xml' && apiResponse?.functionalAllocation?.programBreakdown) {
+          // Use program breakdown from XML response if available
+          const programBreakdown = apiResponse.functionalAllocation.programBreakdown.map(p => ({
+            name: p.programName,
+            description: `Program area with ${p.percentageOfProgram}% allocation`,
+            percentage: p.percentageOfProgram.toString()
+          }));
+          setPrograms(programBreakdown);
         } else if (data && typeof data === 'object' && typeof data.message === 'string') {
           // Handle case where OpenAI returned a fallback message
           setError(data.message);

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 
 export default function Review() {
   const router = useRouter();
-  const { programs, totals, mode } = useUploadContext();
+  const { programs, totals, mode, apiResponse } = useUploadContext();
 
   const formatCurrency = (amount?: number) => {
     if (!amount) return 'N/A';
@@ -67,7 +67,22 @@ export default function Review() {
   // Generate database-ready JSON format
   const generateDatabaseFormat = () => {
     const transparencyMetrics = (totals as any)?.transparency_metrics;
-    
+
+    // Use program breakdown from API response if available, otherwise use manual programs
+    let programBreakdown;
+    if (mode === 'xml' && apiResponse?.functionalAllocation?.programBreakdown) {
+      programBreakdown = apiResponse.functionalAllocation.programBreakdown;
+    } else {
+      programBreakdown = programs
+        .filter(p => p.percentage && p.percentage !== "") // Only include programs with percentages
+        .map((program, index) => ({
+          programId: `prog_${Date.now()}_${index + 1}`, // Generate unique IDs
+          programName: program.name,
+          percentageOfProgram: parseInt(program.percentage) || 0,
+          metaTags: [] // You'll assign these later
+        }));
+    }
+
     // Format defaultAllocations JSONB field
     const defaultAllocations = {
       fiscalYearStart: "2024-01-01", // You may want to make this dynamic
@@ -76,14 +91,7 @@ export default function Review() {
         admin: totals?.admin_pct || 0,
         fundraising: totals?.fundraising_pct || 0
       },
-      programBreakdown: programs
-        .filter(p => p.percentage && p.percentage !== "") // Only include programs with percentages
-        .map((program, index) => ({
-          programId: `prog_${Date.now()}_${index + 1}`, // Generate unique IDs
-          programName: program.name,
-          percentageOfProgram: parseInt(program.percentage) || 0,
-          metaTags: [] // You'll assign these later
-        }))
+      programBreakdown
     };
 
     // Format transparencyMetrics JSONB field (if available)
