@@ -73,7 +73,12 @@ export default function FunctionalAllocation() {
             if (functionalData) {
               // Convert to legacy format for backward compatibility
               const legacyTotals = {
-                ...functionalData,
+                program: functionalData.program,
+                admin: functionalData.admin,
+                fundraising: functionalData.fundraising,
+                program_pct: functionalData.program,
+                admin_pct: functionalData.admin,
+                fundraising_pct: functionalData.fundraising,
                 transparency_metrics: data.transparencyMetrics ? {
                   source: data.transparencyMetrics.source,
                   data_quality: data.transparencyMetrics.data_quality,
