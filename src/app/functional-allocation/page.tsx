@@ -64,6 +64,7 @@ export default function FunctionalAllocation() {
 
         if (res.ok && !data.error) {
           console.log('📊 Received data from API:', data);
+          console.log('🔍 Mode:', mode);
 
           if (mode === 'xml') {
             // Handle new nested structure for XML
@@ -96,10 +97,12 @@ export default function FunctionalAllocation() {
                   has_website: data.transparencyMetrics.transparency?.has_website
                 } : undefined
               };
+              console.log('📊 Legacy totals for XML:', legacyTotals);
               setTotals(legacyTotals);
             }
           } else {
             // PDF mode - keep existing behavior
+            console.log('📊 PDF data:', data);
             setTotals(data);
           }
         } else {
@@ -190,9 +193,9 @@ export default function FunctionalAllocation() {
 
             <UnifiedPieChart
               data={[
-                { label: 'Program Services', value: totals.program_pct },
-                { label: 'Administrative', value: totals.admin_pct },
-                { label: 'Fundraising', value: totals.fundraising_pct }
+                { label: 'Program Services', value: totals.program_pct || 0 },
+                { label: 'Administrative', value: totals.admin_pct || 0 },
+                { label: 'Fundraising', value: totals.fundraising_pct || 0 }
               ]}
               size="large"
               showPercentagesInLegend={true}

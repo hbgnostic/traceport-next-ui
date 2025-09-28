@@ -90,10 +90,11 @@ export default function UnifiedPieChart({
           generateLabels: showPercentagesInLegend
             ? (chart: any) => {
                 return chart.data.labels.map((label: string, index: number) => {
-                  const value = chartData[index].value;
+                  const value = chartData[index]?.value;
+                  const safeValue = typeof value === 'number' ? value : 0;
                   return {
-                    text: `${label}: ${value.toFixed(1)}%`,
-                    fillStyle: chartData[index].color,
+                    text: `${label}: ${safeValue.toFixed(1)}%`,
+                    fillStyle: chartData[index]?.color || '#cccccc',
                     strokeStyle: '#ffffff',
                     lineWidth: 2,
                     index: index,
@@ -108,7 +109,8 @@ export default function UnifiedPieChart({
           label: (context: any) => {
             const label = context.label || '';
             const value = context.parsed;
-            return `${label}: ${value.toFixed(1)}%`;
+            const safeValue = typeof value === 'number' ? value : 0;
+            return `${label}: ${safeValue.toFixed(1)}%`;
           },
         },
       },
