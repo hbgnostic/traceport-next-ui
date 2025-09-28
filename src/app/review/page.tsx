@@ -43,23 +43,11 @@ export default function Review() {
 
   // Generate the complete JSON structure for easy copying
   const generateCompleteJSON = () => {
-    const transparencyMetrics = (totals as any)?.transparency_metrics;
-    
+    const dbFormat = generateDatabaseFormat();
+
     return {
-      functional_allocation: {
-        admin: totals?.admin || 0,
-        admin_pct: totals?.admin_pct || 0,
-        fundraising: totals?.fundraising || 0,
-        fundraising_pct: totals?.fundraising_pct || 0,
-        program: totals?.program || 0,
-        program_pct: totals?.program_pct || 0,
-        ...(transparencyMetrics && { transparency_metrics: transparencyMetrics })
-      },
-      program_allocation: programs.map(p => ({
-        name: p.name,
-        description: p.description,
-        percentage: p.percentage
-      })),
+      "1_functional_and_program_allocations": dbFormat.defaultAllocations,
+      "2_transparency_metrics": dbFormat.transparencyMetrics,
       generated_at: new Date().toISOString()
     };
   };
